@@ -1,0 +1,32 @@
+تطبيق MAPs على الجوال — it.multiaidprograms.org
+=================================================
+
+1) رابط النظام محطوط جاهز بملف index.html (سطر APP).
+   إذا عملت نشر جديد (New deployment) يوماً، بدّل الرابط بهالسطر بس.
+
+2) ارفع الملفات على GitHub (مجاني)
+   - اعمل حساب على github.com (أو استعمل حساب الـIT)
+   - New repository ← الاسم: maps-it-app ← Public ← Create
+   - Add file ← Upload files ← اسحب كل الملفات بهالمجلد ← Commit
+   - Settings ← Pages ← Source: Deploy from a branch ← Branch: main / (root) ← Save
+   - بعد دقيقة بيشتغل على: https://اسم-حسابك.github.io/maps-app/  (منه بتقدر تثبّت التطبيق وتجرّب)
+   - لاحقاً لما يصير عندك وصول للدومين: بنفس الصفحة Custom domain = it.multiaidprograms.org ← Save
+     (GitHub بيعمل ملف CNAME لحاله، والرابط القديم github.io بيتحوّل للدومين تلقائياً)
+
+3) سجل DNS (لاحقاً، عند مزوّد الدومين multiaidprograms.org)
+   ضيف سجل:  Type = CNAME   |   Name = it   |   Value = اسم-حسابك.github.io
+   (مثلاً maps-it.github.io). انطر من 10 دقايق لساعة.
+   بعدها بـ GitHub ← Settings ← Pages ← علّم على Enforce HTTPS
+
+4) Apps Script
+   الصق Code.gs و Index.html الجداد ← Deploy ← Manage deployments ← ✏️ ← New version
+
+5) على الجوال
+   افتح https://it.multiaidprograms.org
+   - أندرويد: بيطلعلك «ثبّت MAPs» تحت، أو من قائمة كروم ⋮ ← Install app / إضافة للشاشة الرئيسية
+   - آيفون (Safari): مشاركة ← إضافة إلى الشاشة الرئيسية
+   كبسة مطوّلة على الأيقونة بتعطيك اختصارات: الصيانة، الشراء، الطلبيات، الدعم
+
+ملاحظات
+- ملصقات الغرف الجديدة بتنطبع بالرابط القصير لحالها. القديمة بتضل شغّالة.
+- أي تحديث للنظام بتنشره من Apps Script متل العادة، والتطبيق بياخده فوراً. ملفات هالمجلد ما بتحتاج تتغيّر.
