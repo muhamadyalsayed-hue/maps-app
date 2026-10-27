@@ -33,6 +33,11 @@
   #tip div{flex:1;line-height:1.5}
   #tip button{background:var(--acc);color:#1a1306;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-weight:700}
   #tip .x{background:transparent;color:var(--mut);padding:6px 8px}
+  #push{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:7;display:none;align-items:center;gap:12px;background:#1a1612;border:1px solid var(--acc);border-radius:16px;padding:12px 14px;box-shadow:0 12px 40px rgba(0,0,0,.5);font-size:.9rem}
+  #push .ic{font-size:1.6rem}
+  #push div{flex:1;line-height:1.5}
+  #push button{background:var(--acc);color:#1a1306;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-weight:700}
+  #push .x{background:transparent;color:var(--mut);padding:6px 8px}
 </style>
 </head>
 <body>
@@ -43,6 +48,7 @@
   <div id="msg"></div>
 </div>
 <iframe id="app" title="MAPs IT" allow="camera; clipboard-write" referrerpolicy="no-referrer-when-downgrade"></iframe>
+<div id="push"><span class="ic">🔔</span><div>فعّل الإشعارات لتوصلك المهام والطلبات يلي بتخصّك فوراً</div><button id="pushGo">تفعيل</button><button class="x" id="pushX" aria-label="لاحقاً">✕</button></div>
 <div id="tip"><img src="icon-192.png" alt=""><div id="tipTxt"></div><button id="tipGo">تثبيت</button><button class="x" id="tipX" aria-label="إغلاق">✕</button></div>
 
 <script>
@@ -88,6 +94,47 @@
   }
 
   if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+<script type="module">
+  // ====== إشعارات الجوال (Firebase Cloud Messaging) ======
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+  const CFG = { apiKey: "AIzaSyCTKWE4WxiYkRqp7XL6hh1ylBHfoeM1DDk", authDomain: "maps-it-70c0f.firebaseapp.com", projectId: "maps-it-70c0f",
+    storageBucket: "maps-it-70c0f.firebasestorage.app", messagingSenderId: "545855133989", appId: "1:545855133989:web:592f89622728afcb1fe2cc" };
+  const VAPID = "BHGTkJXI8nUlSVyr6XL6WXtC_fdNoU11sVWvC-j3nydeh9h82pc-48AnH7Lkbqr2WGJRXdEfzsm-6rr9QSEOHe8";
+  const $ = id => document.getElementById(id);
+  let msg = null, src = null, busy = false;
+  const ok = ('Notification' in window) && ('serviceWorker' in navigator) && await isSupported().catch(() => false);
+  if (ok) {
+    msg = getMessaging(initializeApp(CFG));
+    // التطبيق مفتوح: منطلّع الإشعار كمان
+    onMessage(msg, p => { const d = p.data || {}; navigator.serviceWorker.ready.then(r => r.showNotification(d.title || 'MAPs', { body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', tag: d.tag || 'maps', renotify: true, data: { link: d.link || './' } })); });
+  }
+  const dev = () => { const u = navigator.userAgent; return (/android/i.test(u) ? 'Android' : /iphone|ipad/i.test(u) ? 'iPhone' : /windows/i.test(u) ? 'Windows' : /mac/i.test(u) ? 'Mac' : 'جهاز') + (matchMedia('(display-mode: standalone)').matches ? ' · تطبيق' : ' · متصفح'); };
+  async function sendToken() {
+    if (busy || !msg || !src) return; busy = true;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const t = await getToken(msg, { vapidKey: VAPID, serviceWorkerRegistration: reg });
+      if (t) src.postMessage({ maps: 'push-token', token: t, device: dev() }, '*');
+    } catch (e) { console.warn('push', e); }
+    busy = false;
+  }
+  const later = () => { try { return Number(localStorage.getItem('maps_push_later') || 0) > Date.now(); } catch (_) { return false; } };
+  addEventListener('message', e => {
+    let host = ''; try { host = new URL(e.origin).hostname; } catch (_) { return; }
+    if (!/\.googleusercontent\.com$/.test(host)) return;
+    if (!e.data || e.data.maps !== 'push-need' || !ok) return;
+    src = e.source;
+    if (Notification.permission === 'granted') sendToken();
+    else if (Notification.permission === 'default' && !later()) { $('tip').style.display = 'none'; $('push').style.display = 'flex'; }
+  });
+  $('pushGo').onclick = async () => {
+    $('push').style.display = 'none';
+    const p = await Notification.requestPermission();
+    if (p === 'granted') sendToken();
+  };
+  $('pushX').onclick = () => { $('push').style.display = 'none'; try { localStorage.setItem('maps_push_later', String(Date.now() + 3 * 864e5)); } catch (_) {} };
 </script>
 </body>
 </html>
